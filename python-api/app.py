@@ -1,4 +1,5 @@
 """API Flask para conversão/compressão de imagens (porta 8001)."""
+import time
 from pathlib import Path
 
 from flask import Flask, Response, jsonify, request, send_from_directory
@@ -13,7 +14,7 @@ app = Flask(__name__, static_folder=None)
 def cors(resp):
     resp.headers["Access-Control-Allow-Origin"] = "*"
     resp.headers["Access-Control-Allow-Headers"] = "*"
-    resp.headers["Access-Control-Expose-Headers"] = "X-Original-Size, X-New-Size, X-Engine"
+    resp.headers["Access-Control-Expose-Headers"] = "X-Original-Size, X-New-Size, X-Engine, X-Time-Ms"
     return resp
 
 
@@ -29,12 +30,15 @@ def convert():
         return jsonify(error="Arquivo não enviado"), 400
     dados = arquivo.read()
     try:
+        inicio = time.perf_counter()
         saida, mime = converter(dados, formato, modo, qualidade)
+        tempo_ms = (time.perf_counter() - inicio) * 1000
     except Exception as e:  # formato/arquivo inválido ou sem suporte no Pillow
         return jsonify(error=str(e)), 422
     resp = Response(saida, mimetype=mime)
     resp.headers["X-Original-Size"] = str(len(dados))
     resp.headers["X-New-Size"] = str(len(saida))
+    resp.headers["X-Time-Ms"] = f"{tempo_ms:.0f}"
     resp.headers["X-Engine"] = "Python (Pillow)"
     return resp
 

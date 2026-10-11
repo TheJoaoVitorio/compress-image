@@ -13,7 +13,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use((_req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "*");
-  res.setHeader("Access-Control-Expose-Headers", "X-Original-Size, X-New-Size, X-Engine");
+  res.setHeader("Access-Control-Expose-Headers", "X-Original-Size, X-New-Size, X-Engine, X-Time-Ms");
   next();
 });
 
@@ -25,10 +25,13 @@ app.post("/api/convert", upload.single("file"), async (req, res) => {
   const modo = (req.body.mode ?? "lossless") as Modo;
   const qualidade = Number(req.body.quality ?? 90);
   try {
+    const inicio = performance.now();
     const { buffer, mime } = await converter(req.file.buffer, formato, modo, qualidade);
+    const tempoMs = performance.now() - inicio;
     res.setHeader("Content-Type", mime);
     res.setHeader("X-Original-Size", String(req.file.size));
     res.setHeader("X-New-Size", String(buffer.length));
+    res.setHeader("X-Time-Ms", tempoMs.toFixed(0));
     res.setHeader("X-Engine", "TypeScript (sharp)");
     res.send(buffer);
   } catch (e) {
