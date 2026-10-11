@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Compressor de Imagens · Antigravity</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600&family=Google+Sans+Code&family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"></span>
+      <span class="brand-name">Compressor de Imagens</span>
+    </div>
+    <div class="segmented" role="tablist" aria-label="Motor de conversão">
+      <button class="seg active" data-engine="python" role="tab">Python · Pillow</button>
+      <button class="seg" data-engine="ts" role="tab">TypeScript · sharp</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Comprima e converta imagens</h1>
+      <p>Escolha o formato de destino e veja quanto espaço você economiza — com o código rodando em Python ou TypeScript.</p>
+    </section>
+
+    <section class="card" id="drop" tabindex="0">
+      <input type="file" id="file" accept="image/*" hidden />
+      <div class="drop-content" id="dropContent">
+        <div class="drop-icon">⬆</div>
+        <p class="drop-title">Arraste uma imagem ou <span class="link">escolha um arquivo</span></p>
+        <p class="muted">PNG, JPEG, WebP, AVIF, GIF, TIFF…</p>
+      </div>
+      <div class="file-info hidden" id="fileInfo">
+        <img id="preOriginal" alt="Original" />
+        <div>
+          <p class="file-name" id="fileName"></p>
+          <p class="muted" id="fileMeta"></p>
+          <div class="chip">Tamanho atual: <strong id="origSize">—</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card options hidden" id="options">
+      <h2>Opções</h2>
+      <label class="label">Formato de saída</label>
+      <div class="chips" id="formats">
+        <button class="pill active" data-format="webp">WebP</button>
+        <button class="pill" data-format="png">PNG</button>
+        <button class="pill" data-format="jpeg">JPEG</button>
+        <button class="pill" data-format="avif">AVIF</button>
+      </div>
+
+      <label class="label">Modo</label>
+      <div class="segmented small">
+        <button class="seg active" data-mode="lossless">Sem perdas</button>
+        <button class="seg" data-mode="lossy">Com perdas</button>
+      </div>
+      <p class="hint" id="hint"></p>
+
+      <div id="qualityWrap" class="hidden">
+        <label class="label">Qualidade: <strong id="qVal">80</strong></label>
+        <input type="range" id="quality" min="1" max="100" value="80" />
+      </div>
+
+      <button class="btn-primary" id="go">Converter</button>
+    </section>
+
+    <section class="card result hidden" id="result">
+      <h2>Resultado</h2>
+      <div class="stats">
+        <div class="stat"><span class="muted">Original</span><strong id="rOrig">—</strong></div>
+        <div class="stat"><span class="muted">Novo</span><strong id="rNew">—</strong></div>
+        <div class="stat highlight"><span class="muted" id="rLabel">Economia</span><strong id="rSave">—</strong></div>
+      </div>
+      <div class="bar"><div class="bar-fill" id="bar"></div></div>
+      <p class="muted" id="rEngine"></p>
+      <div class="preview">
+        <figure><figcaption>Original</figcaption><img id="imgA" alt="Original" /></figure>
+        <figure><figcaption>Convertida</figcaption><img id="imgB" alt="Convertida" /></figure>
+      </div>
+      <a class="btn-tonal" id="download">Baixar imagem</a>
+    </section>
+
+    <p class="error hidden" id="error"></p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
