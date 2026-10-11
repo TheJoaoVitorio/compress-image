@@ -120,3 +120,94 @@ function showResult(blob, orig, novo, engine) {
 }
 
 updateHint();
+
+// Esconde painéis antigos ao iniciar uma nova conversão
+$("go").addEventListener("click", () => $("comparison").classList.add("hidden"));
+
+// Executa as duas rotinas (uma por vez, para não disputarem CPU) e compara
+async function runEngine(engine) {
+  const body = new FormData();
+  body.append("file", state.file);
+  body.append("format", state.format);
+  body.append("mode", state.mode);
+  body.append("quality", $("quality").value);
+  const res = await fetch(ENGINES[engine] + "/api/convert", { method: "POST", body });
+  if (!res.ok) throw new Error(engine + ": " + ((await res.json()).error || "falha na conversão"));
+  const blob = await res.blob();
+  return { blob, size: Number(res.headers.get("X-New-Size")), time: Number(res.headers.get("X-Time-Ms")) };
+}
+
+$("compare").addEventListener("click", async () => {
+  if (!state.file) return;
+  showError("");
+  const btn = $("compare");
+  btn.disabled = true;
+  $("go").disabled = true;
+  btn.textContent = "Comparando…";
+  $("result").classList.add("hidden");
+  try {
+    const py = await runEngine("python");
+    const ts = await runEngine("ts");
+    showComparison(py, ts);
+  } catch (err) {
+    showError(err.message.includes("Failed to fetch")
+      ? "Não foi possível conectar. Para comparar, as duas APIs (portas 8001 e 8002) precisam estar rodando."
+      : err.message);
+  } finally {
+    btn.disabled = false;
+    $("go").disabled = false;
+    btn.textContent = "Comparar Python × TypeScript";
+  }
+});
+
+function showComparison(py, ts) {
+  const orig = state.file.size;
+  const save = (n) => {
+    const d = ((orig - n) / orig) * 100;
+    return (d < 0 ? "+" : "−") + Math.abs(d).toFixed(1) + "%";
+  };
+  const mark = (a, b, idA, idB) => {
+    $(idA).classList.toggle("win", a < b);
+    $(idB).classList.toggle("win", b < a);
+  };
+  const label = state.format.toUpperCase() + " · " + (state.mode === "lossless" || state.format === "png" ? "sem perdas" : "qualidade " + $("quality").value);
+  $("cmpInfo").textContent = `${state.file.name} (${fmt(orig)}) → ${label}. Tempo medido no servidor.`;
+  $("cmpPySize").textContent = fmt(py.size);
+  $("cmpTsSize").textContent = fmt(ts.size);
+  $("cmpPySave").textContent = save(py.size);
+  $("cmpTsSave").textContent = save(ts.size);
+  $("cmpPyTime").textContent = py.time + " ms";
+  $("cmpTsTime").textContent = ts.time + " ms";
+  mark(py.size, ts.size, "cmpPySize", "cmpTsSize");
+  mark(py.size, ts.size, "cmpPySave", "cmpTsSave");
+  mark(py.time, ts.time, "cmpPyTime", "cmpTsTime");
+
+  const menor = py.size === ts.size ? "empate no tamanho" : (py.size < ts.size ? "Python gerou o menor arquivo" : "TypeScript gerou o menor arquivo");
+  const rapido = py.time === ts.time ? "empate no tempo" : (py.time < ts.time ? "Python foi mais rápido" : "TypeScript foi mais rápido");
+  $("cmpVerdict").textContent = `${menor[0].toUpperCase() + menor.slice(1)}; ${rapido}.`;
+
+  if (state.cmpUrls) state.cmpUrls.forEach((u) => URL.revokeObjectURL(u));
+  state.cmpUrls = [URL.createObjectURL(py.blob), URL.createObjectURL(ts.blob)];
+  $("cmpImgPy").src = state.cmpUrls[0];
+  $("cmpImgTs").src = state.cmpUrls[1];
+  $("comparison").classList.remove("hidden");
+  $("comparison").scrollIntoView({ behavior: "smooth" });
+}
+
+// Botão de refresh: limpa tudo e volta ao início
+$("reset").addEventListener("click", () => {
+  [state.url, ...(state.cmpUrls || [])].forEach((u) => u && URL.revokeObjectURL(u));
+  state.file = null; state.url = null; state.cmpUrls = null;
+  $("file").value = "";
+  ["preOriginal", "imgA", "imgB", "cmpImgPy", "cmpImgTs"].forEach((id) => $(id).removeAttribute("src"));
+  ["fileInfo", "options", "result", "comparison"].forEach((id) => $(id).classList.add("hidden"));
+  $("dropContent").classList.remove("hidden");
+  showError("");
+  // volta as opções padrão
+  document.querySelector('[data-engine="python"]').click();
+  document.querySelector('[data-format="webp"]').click();
+  document.querySelector('[data-mode="lossless"]').click();
+  $("quality").value = 80;
+  $("qVal").textContent = "80";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});

@@ -14,9 +14,12 @@
       <span class="logo" aria-hidden="true"></span>
       <span class="brand-name">Compressor de Imagens</span>
     </div>
-    <div class="segmented" role="tablist" aria-label="Motor de conversão">
-      <button class="seg active" data-engine="python" role="tab">Python · Pillow</button>
-      <button class="seg" data-engine="ts" role="tab">TypeScript · sharp</button>
+    <div class="topbar-actions">
+      <div class="segmented" role="tablist" aria-label="Motor de conversão">
+        <button class="seg active" data-engine="python" role="tab">Python · Pillow</button>
+        <button class="seg" data-engine="ts" role="tab">TypeScript · sharp</button>
+      </div>
+      <button class="icon-btn" id="reset" title="Limpar e voltar ao início" aria-label="Limpar e voltar ao início">↻</button>
     </div>
   </header>
 
@@ -65,7 +68,28 @@
         <input type="range" id="quality" min="1" max="100" value="80" />
       </div>
 
-      <button class="btn-primary" id="go">Converter</button>
+      <div class="actions">
+        <button class="btn-primary" id="go">Converter</button>
+        <button class="btn-outlined" id="compare">Comparar Python × TypeScript</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="comparison">
+      <h2>Comparativo: Python × TypeScript</h2>
+      <p class="muted" id="cmpInfo"></p>
+      <table class="cmp-table">
+        <thead><tr><th></th><th>Python · Pillow</th><th>TypeScript · sharp</th></tr></thead>
+        <tbody>
+          <tr><td>Tamanho final</td><td id="cmpPySize">—</td><td id="cmpTsSize">—</td></tr>
+          <tr><td>Economia</td><td id="cmpPySave">—</td><td id="cmpTsSave">—</td></tr>
+          <tr><td>Tempo de processamento</td><td id="cmpPyTime">—</td><td id="cmpTsTime">—</td></tr>
+        </tbody>
+      </table>
+      <p class="verdict" id="cmpVerdict"></p>
+      <div class="preview">
+        <figure><figcaption>Python</figcaption><img id="cmpImgPy" alt="Resultado Python" /></figure>
+        <figure><figcaption>TypeScript</figcaption><img id="cmpImgTs" alt="Resultado TypeScript" /></figure>
+      </div>
     </section>
 
     <section class="card result hidden" id="result">
